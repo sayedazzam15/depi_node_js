@@ -12,7 +12,8 @@ export async function createTodo(data){
     const todo = {id,...data};
     todos.push(todo);
     await writeTodos(todos);
-    logger(`todo created successfully with id: ${id}`,'green')
+    return todo;
+   
  }
  
  export async function showAllTodos(){
@@ -25,13 +26,13 @@ export async function createTodo(data){
  }
  
  export async function updateTodo(id,data){
-     const todos = await getTodos();
+     let todos = await getTodos();
      todos = todos.map((todo) => {
          if(todo.id == id) todo = {...todo,...data};
          return todo;
      });
      await writeTodos(todos);
-     logger('todo updated successfully','yellow');
+    return todos.filter((todo) => todo.id == id);
  }
  
  export async function deleteTodo(id){

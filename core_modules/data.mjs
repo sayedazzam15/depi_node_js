@@ -8,7 +8,7 @@ export async function getTodos(){
 }
 export async function writeTodos(todos){
     try {
-        await writeFile(filePath,JSON.stringify(todos));
+        return await writeFile(filePath,JSON.stringify(todos));
     } catch (error) {
         throw 'error happened will writing to file: ' + error.message;
     }
