@@ -1,7 +1,12 @@
 import { deleteOne, getTodos, insertTodo, showOne, update, writeTodos, } from "./data.mjs";
+import User from "./Model/User.mjs";
 
 export async function createTodo(data){
-    await insertTodo(data);
+    const user = await User.findById(data.user_id);
+    if(!user) throw new Error('user not found');
+    const todo = await insertTodo(data);
+    user.todos.push(todo._id);
+    await user.save();
  }
  
  export async function showAllTodos(){
