@@ -1,5 +1,7 @@
 import { model, Schema } from "mongoose";
 import bcrypt from 'bcrypt';
+import fs from 'fs/promises';
+import jwt from 'jsonwebtoken';
 
 const userSchema = new Schema({
     name: {
@@ -26,6 +28,11 @@ const userSchema = new Schema({
       todos: {
         type: [Schema.Types.ObjectId],
         ref: 'todos'
+      },
+      tokens: [{token: {type: String,required: true}}],
+      role: {
+        type: String,
+        in: ['user','admin']
       }
 });
 // schema middleware
@@ -38,4 +45,31 @@ userSchema.pre('save',async function(next){
   this.password = hash;
   next();
 });
-export default model('user',userSchema);
+
+userSchema.statics.findByCredential =async (email,password)=>{
+  const user = await User.findOne({email});
+  if(!user) throw new Error;
+  const isPasswordMatch = await bcrypt.compare(password,user.password);
+  if(!isPasswordMatch) throw new Error;
+  return user;
+}
+
+userSchema.methods.generateToken = async function(abilities = '*'){
+  let user = this;
+  const privateKey = await fs.readFile('./private.key');
+  var token = jwt.sign({ id: user._id.toString(),abilities },privateKey,{ algorithm: 'RS256' });
+  user.tokens.push({token});
+  await user.save();
+  return token;
+}
+
+userSchema.methods.toJSON = function(){
+  let user = this;
+  user = user.toObject();
+  delete user.password;
+  delete user.tokens;
+  return user;
+}
+
+const User = model('user',userSchema);
+export default User;
